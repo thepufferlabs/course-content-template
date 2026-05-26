@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Thin stub. Fetches the real validator from senapatisantosh/course-tooling
+# Thin stub. Fetches the real validator from thepufferlabs/course-tooling
 # and runs it against this repo. Update TOOLING_REF to pin a different
 # version. Defaults to the floating v1 tag.
 #
@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-REPO="${COURSE_TOOLING_REPO:-senapatisantosh/course-tooling}"
+REPO="${COURSE_TOOLING_REPO:-thepufferlabs/course-tooling}"
 REF="${COURSE_TOOLING_REF:-v1}"
 URL="https://raw.githubusercontent.com/${REPO}/${REF}/scripts/validate.sh"
 

@@ -11,6 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: senapatisantosh/course-tooling/actions/validate@v1
+      - uses: thepufferlabs/course-tooling/actions/validate@v1
         with:
           strict: "false"
