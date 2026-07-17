@@ -1,48 +1,45 @@
-# course-content-template
+# Course Content Template — Puffer Labs
 
-> GitHub template repository. Click **"Use this template"** to create a new course repo with everything pre-wired.
+A GitHub **template repository**. Each course is its **own separate repo** made from this template —
+no monorepo. The `course-factory` skill is bundled inside, so a fresh repo is ready to generate a
+full course with one prompt, even in the browser and even when private.
 
-This repo provides the bootstrap scaffold for any new `premium-content-repo` (schema v1.0). After clicking *Use this template*:
+## Make a new course (≈2 minutes of your time)
 
-1. Rename your new repo and set its slug.
-2. Replace `<COURSE_SLUG>` in `.github/workflows/sync-to-supabase.yml`.
-3. Copy `COURSE-BRIEF.template.md` → `COURSE-BRIEF.md` and fill it in.
-4. Ask Claude: *"Generate the course repo from `COURSE-BRIEF.md` per `MASTER-COURSE-REPO-PROMPT.md`."*
-5. Add the required GitHub Actions secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+1. On GitHub, click **Use this template → Create a new repository** and name it after the course
+   (e.g. `redis-mastery`). This creates a brand-new, standalone repo.
+2. Open that repo in **Claude Code** — the browser (claude.ai/code) or the CLI. The bundled skill
+   loads automatically; `CLAUDE.md` tells the agent to generate into this repo's root.
+3. Say: **"Generate a course on Redis"** (or fill `spec/course-spec.md` first for more control).
+   The agent writes the spec, ~25+ chapters, labs, case studies, cheatsheets, runnable code, and
+   assets, derives the manifests, validates, and commits.
+4. It pushes → the `sync-to-supabase` workflow publishes the course to the storefront.
 
-That's it.
+## What's inside
 
-## What's in here
-
-| Path | What it does | Edit? |
-|---|---|---|
-| `MASTER-COURSE-REPO-PROMPT.md` | The prompt Claude reads to scaffold the course | No |
-| `COURSE-BRIEF.template.md` | Fill-in form: course identity, chapters, depth notes, code samples | Copy → `COURSE-BRIEF.md`, then yes |
-| `COURSE-PLATFORM-PROMPT.md` | Reference for the platform side (Next.js + Supabase) | No |
-| `scripts/validate.sh` | Thin stub — fetches and runs the real validator from `thepufferlabs/course-tooling` | No |
-| `.github/workflows/validate.yml` | CI: runs the validator on every push/PR via the central action | No |
-| `.github/workflows/sync-to-supabase.yml` | CI: pushes content to Supabase on merges to `main` | **Yes** — swap `<COURSE_SLUG>` |
-| `.content-repo` | Empty marker file; triggers the sync workflow | No |
-| `.gitignore` | Standard ignores | No |
-
-## How updates flow
-
-- **Prompts** (`MASTER-*`, `COURSE-*`): copied once at init. If they change in this template, you can `git pull` them in manually or just live with the version you bootstrapped against.
-- **Validator** (`scripts/validate.sh`): the stub here fetches the real script from `thepufferlabs/course-tooling@v1`. When that repo ships a fix and re-tags `v1`, your next CI run picks it up automatically. No copy-paste.
-
-Pin to a specific version any time:
-
-```bash
-COURSE_TOOLING_REF=v1.2.3 bash scripts/validate.sh
+```
+CLAUDE.md                       ← standing instructions (generate here; never a subfolder/new repo)
+.claude/skills/course-factory/  ← the bundled skill (self-contained; no marketplace needed)
+spec/                           ← constitution (contract) + spec/plan/tasks forms
+docs/ src/ assets/ blog/ data/  ← empty structure the agent fills
+scripts/                        ← build-manifests.mjs, validate-local.sh
+.github/workflows/              ← sync-to-supabase.yml (+ validate.yml)
+meta.json  .content-repo        ← course metadata + sync trigger marker
 ```
 
-## Local development on a course repo
+## One-time GitHub setup
 
+- Mark this repo as a template: **Settings → General → ✅ Template repository**.
+- Provide the sync secrets (repo- or org-level): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+
+## Keeping the bundled skill fresh
+
+The skill is a snapshot under `.claude/skills/course-factory/`. When you improve the factory in the
+`course-studio` repo, refresh this template with:
 ```bash
-# Generate course content (Claude writes the docs/, src/, data/ files)
-# ... follow the brief ...
-
-# Validate
-bash scripts/validate.sh
-bash scripts/validate.sh --strict    # fail on warnings too
+rm -rf .claude/skills/course-factory
+cp -R /path/to/course-studio/plugins/course-factory .claude/skills/course-factory
+git commit -am "refresh bundled course-factory skill"
 ```
+New repos made from the template then pick up the update. (Existing course repos keep their copy —
+re-copy into them if you want the latest.)

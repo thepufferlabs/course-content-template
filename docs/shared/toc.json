@@ -1,0 +1,11 @@
+{
+  "projectSlug": "your-course-slug",
+  "title": "<COURSE_TITLE> — Learning Path",
+  "toc": [
+    {
+      "phase": "Learning Path",
+      "description": "",
+      "items": []
+    }
+  ]
+}

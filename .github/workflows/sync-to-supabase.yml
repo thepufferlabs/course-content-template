@@ -1,41 +1,14 @@
-# =============================================================================
-# Caller Workflow — Syncs this course repo's content to Supabase
-#
-# Calls the reusable workflow in thepufferlabs/ci-reusable-actions-workflows which:
-#   1. Uploads free content → free-content bucket
-#   2. Uploads premium content → premium-content bucket
-#   3. Uploads assets → course-assets bucket
-#   4. Upserts product record → products table
-#   5. Syncs content index → product_content table
-#   6. Upserts course details → course_details table
-#
-# Required secrets (set at repo or org level):
-#   SUPABASE_URL              — Supabase project URL
-#   SUPABASE_SERVICE_ROLE_KEY — Service role key (NOT anon key)
-# =============================================================================
-
 name: Sync to Supabase
-
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "docs/**"
-      - "blog/**"
-      - "src/**"
-      - "assets/**"
-      - "meta.json"
-      - "data/**"
-      - ".content-repo"
-
+    branches: [main]
+    paths: ["docs/**","blog/**","src/**","assets/**","meta.json","data/**",".content-repo"]
   workflow_dispatch:
-
 jobs:
   sync:
     uses: thepufferlabs/ci-reusable-actions-workflows/.github/workflows/sync-course-content.yml@main
     with:
-      product-slug: <COURSE_SLUG>
+      product-slug: your-course-slug
       content-branch: main
     secrets:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

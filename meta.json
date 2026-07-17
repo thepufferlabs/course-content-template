@@ -1,0 +1,41 @@
+{
+  "$schema": "premium-content-repo",
+  "schemaVersion": "1.0",
+  "repoType": "premium-content-repo",
+  "title": "<COURSE_TITLE>",
+  "slug": "your-course-slug",
+  "shortDescription": "<=140 chars, benefit-led catalog pitch>",
+  "longDescription": "<2-4 sentences; search embedding only>",
+  "category": "<systems|backend|frontend|data|devops|ml|search-systems>",
+  "level": "<beginner-to-staff|intermediate-to-staff>",
+  "tags": [
+    "<tag1>",
+    "<tag2>",
+    "<tag3>"
+  ],
+  "banner": "assets/banner.svg",
+  "thumbnail": "assets/thumbnail.svg",
+  "productType": "course",
+  "status": "published",
+  "priceCents": 9900,
+  "currency": "INR",
+  "comparePriceCents": 29900,
+  "premiumSourceType": "same_repo",
+  "premiumSourceRef": "docs/premium",
+  "previewDocPaths": [],
+  "premiumDocPaths": [],
+  "publicBlogPaths": [],
+  "premiumBlogPaths": [],
+  "sampleCodePaths": [],
+  "premiumCodePaths": [],
+  "freeContentCount": 0,
+  "premiumContentCount": 0,
+  "version": "1.0.0",
+  "githubTopics": [
+    "premium-content-repo",
+    "learning-course",
+    "<category>"
+  ],
+  "publicRepoUrl": "https://github.com/thepufferlabs/your-course-slug",
+  "metadata": {}
+}

@@ -1,0 +1,9 @@
+{
+  "name": "course-factory",
+  "description": "Spec-Driven Development factory that generates premium, publishable course-content repositories (premium-content-repo v1.0) for the Puffer Labs platform. Scaffolds a course repo, walks Constitution -> Specify -> Plan -> Tasks -> Implement -> Verify, and emits a repo the GitHub -> Supabase -> Next.js pipeline publishes unchanged.",
+  "author": { "name": "The Puffer Labs" },
+  "homepage": "https://github.com/thepufferlabs/course-studio",
+  "repository": "https://github.com/thepufferlabs/course-studio",
+  "license": "MIT",
+  "keywords": ["course", "content", "spec-driven-development", "education", "course-generator", "supabase"]
+}
