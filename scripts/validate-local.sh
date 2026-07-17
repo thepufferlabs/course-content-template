@@ -14,6 +14,15 @@ err()  { echo "✗ $1"; ERRORS=$((ERRORS+1)); }
 warn() { echo "⚠ $1"; WARN=$((WARN+1)); }
 ok()   { echo "✓ $1"; }
 
+# Un-filled scaffold (the template repo, or a fresh "Use this template" repo before the course is
+# generated) — there is nothing to validate yet. Exit clean so template/CI stays green until real
+# content exists. Once any doc is written, full validation runs.
+DOC_COUNT=$(find docs/free docs/premium -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+if [ "${DOC_COUNT:-0}" = "0" ]; then
+  echo "• No course docs yet (un-filled scaffold) — skipping validation. Generate the course, then re-run."
+  exit 0
+fi
+
 echo "== structural =="
 for f in meta.json .content-repo docs/shared/content-index.json docs/shared/sidebar.json docs/shared/toc.json data/tags.json; do
   [ -e "$f" ] && ok "$f" || err "missing $f (run build-manifests.mjs first?)"

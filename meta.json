@@ -16,7 +16,7 @@
   "banner": "assets/banner.svg",
   "thumbnail": "assets/thumbnail.svg",
   "productType": "course",
-  "status": "published",
+  "status": "draft",
   "priceCents": 9900,
   "currency": "INR",
   "comparePriceCents": 29900,

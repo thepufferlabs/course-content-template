@@ -5,7 +5,25 @@ on:
     paths: ["docs/**","blog/**","src/**","assets/**","meta.json","data/**",".content-repo"]
   workflow_dispatch:
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          slug=$(node -p "require('./meta.json').slug" 2>/dev/null || echo "")
+          docs=$(find docs/free docs/premium -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$docs" = "0" ] || [ "$slug" = "your-course-slug" ] || [ -z "$slug" ]; then
+            echo "Un-filled scaffold / template (slug=$slug, docs=$docs) — skipping sync."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
   sync:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
     uses: thepufferlabs/ci-reusable-actions-workflows/.github/workflows/sync-course-content.yml@main
     with:
       product-slug: your-course-slug
