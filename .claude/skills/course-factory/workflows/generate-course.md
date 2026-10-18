@@ -49,8 +49,11 @@ A subagent has no shared memory — inline everything it needs:
    `schema-contract.md`) — contentKey, section, accessLevel, order, tags, routePath must be exact.
 3. **The skeleton** for its type (`doc.skeleton.md` / `lab.skeleton.md` / `case-study.skeleton.md`
    / `cheatsheet.skeleton.md`) and the **spine** from `chapter-playbook.md`.
-4. **The render rules** from `consumer-render.md` (pure GFM, ` ```mermaid `, absolute image URLs,
-   known code langs, no HTML).
+4. **The render rules** from `consumer-render.md` (pure GFM, absolute image URLs, known code
+   langs, no HTML) **and the rich-block rules** from `rich-content.md`: ` ```callout `
+   discussion + concept, ` ```flow ` / ` ```sequence ` (four colours, `%% step N:` narration),
+   ` ```proscons `, ` ```params `, one closing ` ```quiz ` with explanations. Paste
+   `templates/rich-blocks.snippets.md` into the brief.
 5. **The depth target** from `quality-rubric.md` for that type (word count, diagrams, worked
    solution required for labs).
 6. **Context for coherence:** the course promise (spec §2), the one cohesive system it builds

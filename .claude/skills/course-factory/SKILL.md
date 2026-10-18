@@ -52,13 +52,18 @@ Advance a phase **only** when its gate passes. If a later phase reveals a spec p
 
 ---
 
-## Two entry modes
+## Three entry modes
 
 1. **Brief-driven (preferred).** If `spec/course-spec.md` exists and is filled, start at Phase 2.
    If only a `COURSE-BRIEF.md` (legacy) exists, translate it into `course-spec.md` first.
 2. **Cold start.** Given only a topic, draft `course-spec.md` from
    [`templates/course-spec.template.md`](templates/course-spec.template.md), confirm the
    identity block (title/slug/price/palette) with the user, then proceed.
+
+3. **Enrich an existing course.** The repo already has lessons (generated before the rich blocks
+   existed, or by hand). Do not regenerate: run
+   [`workflows/enrich-course.md`](workflows/enrich-course.md) — audit → add blocks per lesson →
+   assemble → verify → preview → PR. Prose, headings, keys and links stay as they are.
 
 Never ask 17 ad-hoc questions. Route all inputs through the spec.
 
@@ -72,15 +77,18 @@ Never ask 17 ad-hoc questions. Route all inputs through the spec.
 | [`references/schema-contract.md`](references/schema-contract.md) | Writing `meta.json`, `content-index.json`, `sidebar.json`, `toc.json`, `tags.json`. Exact shapes. |
 | [`references/consumer-render.md`](references/consumer-render.md) | Writing any markdown or asset. How the Next.js viewer renders it → what breaks. |
 | [`references/chapter-playbook.md`](references/chapter-playbook.md) | Writing any doc/lab/case-study/cheatsheet. The pedagogical spine + depth patterns. |
+| [`references/rich-content.md`](references/rich-content.md) | Writing any lesson body. The nine interactive fences (`callout`, `flow`, `sequence`, `diagram`, `quiz`, `proscons`, `params`, `demo`, `codetabs`) — exact syntax, placement, four-colour rule. |
 | [`references/quality-rubric.md`](references/quality-rubric.md) | Phase 1 (scoping) and Phase 6 (scoring). The ₹99 value bar. |
 | [`references/asset-guide.md`](references/asset-guide.md) | Generating `banner.svg`, `thumbnail.svg`, per-section previews. |
 | [`workflows/generate-course.md`](workflows/generate-course.md) | Phase 4. Agentic AFK fan-out: how to parallelize chapter generation across subagents. |
+| [`workflows/enrich-course.md`](workflows/enrich-course.md) | An **existing** course that predates the rich blocks: audit it with `scripts/enrich-report.mjs`, add blocks lesson by lesson without rewriting prose, verify, preview, PR. |
 
 ## Templates (copy, then fill)
 
 `templates/course-spec.template.md`, `curriculum-plan.template.md`, `tasks.template.md`,
-`meta.template.json`, and the content skeletons: `doc.skeleton.md`, `lab.skeleton.md`,
-`case-study.skeleton.md`, `cheatsheet.skeleton.md`, `blog.skeleton.md`.
+`meta.template.json`, the content skeletons: `doc.skeleton.md`, `lab.skeleton.md`,
+`case-study.skeleton.md`, `cheatsheet.skeleton.md`, `blog.skeleton.md`, and
+`rich-blocks.snippets.md` (copy-paste bodies for every interactive block).
 
 ## Scripts (run — never guess their output)
 
@@ -90,6 +98,10 @@ Never ask 17 ad-hoc questions. Route all inputs through the spec.
   Phase 5. Manifests are derived, never hand-written.
 - `scripts/validate-local.sh` — the same checks the CI validator runs, plus the drift
   checks that would make the course render badly. Run in Phase 6. Must exit 0 before "done".
+- `scripts/enrich-report.mjs` — audits every lesson for rich-block coverage and lists the
+  candidates (` ```mermaid ` fences to convert, contract tables → `params`, comparison tables →
+  `proscons`, note lines → alerts, stacked fences → `codetabs`, missing quiz / callout) plus
+  render defects (HTML, wiki-links, bad colours). Run before and after enrichment.
 - `scripts/new-course.sh` — scaffolds an empty course repo (dirs + `spec/` + `.github/` +
   markers) so Phase 1 has somewhere to write.
 
@@ -104,9 +116,14 @@ Never ask 17 ad-hoc questions. Route all inputs through the spec.
    `sidebar.json`, and `toc.json`. A mismatch 404s the lesson.
 4. **`accessLevel` + `toc` phase-form.** Not `access`, not `phases`. The viewer's parser
    expects these exact keys (verified). Getting this wrong = blank sidebar / no learning path.
-5. **Pure GFM markdown.** No raw HTML (the reader has no `rehype-raw`), absolute image URLs
-   only, fenced code with a known language, diagrams via ` ```mermaid `. Frontmatter is
-   stripped and ignored — never rely on it for display metadata.
+5. **Pure GFM markdown + the nine rich fences.** No raw HTML (the reader has no `rehype-raw`),
+   absolute image URLs only, fenced code with a known language. Interactivity comes **only** from
+   ` ```callout ` ` ```flow ` ` ```sequence ` ` ```diagram ` ` ```quiz ` ` ```proscons ` ` ```params `
+   ` ```demo ` ` ````codetabs ` (see `references/rich-content.md`): every doc gets a
+   discussion/concept callout, a four-colour diagram and a closing quiz. Plain ` ```mermaid ` is
+   never written in new content: flowcharts are ` ```flow `, sequences ` ```sequence `, everything
+   else ` ```diagram `. Frontmatter is stripped and ignored — never rely on it for display
+   metadata.
 
 When done, print a summary (counts, rubric score, validator status) and the exact
 `git`/push steps that trigger the Supabase sync.

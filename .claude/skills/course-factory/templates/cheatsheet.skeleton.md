@@ -31,6 +31,12 @@ isPublished: true
 { "example": "..." }
 ```
 
+```params title="<Command / endpoint> parameters"
+columns: [Flag, Default, Description]
+rows:
+  - [<flag>, "<default>", "<what it does (gotcha: ...)>"]
+```
+
 ## <Group 2>
 
 | Item | When to use | Gotcha |

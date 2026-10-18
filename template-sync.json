@@ -1,0 +1,19 @@
+{
+  "$comment": "Files the template owns in every course repo. On push to main, .github/workflows/template-sync.yml copies these paths into each downstream repo (discovered by GitHub topic) and commits them. Course-specific files (meta.json, spec/course-spec.md, docs/, data/, README.md) are never touched.",
+  "downstream": {
+    "owner": "thepufferlabs",
+    "topic": "premium-content-repo",
+    "marker": "meta.json",
+    "exclude": []
+  },
+  "managedPaths": [
+    ".claude/skills/course-factory",
+    ".github/workflows/sync-to-supabase.yml",
+    ".github/workflows/validate.yml",
+    ".gitignore",
+    "CLAUDE.md",
+    "scripts/build-manifests.mjs",
+    "scripts/validate-local.sh",
+    "spec/constitution.md"
+  ]
+}

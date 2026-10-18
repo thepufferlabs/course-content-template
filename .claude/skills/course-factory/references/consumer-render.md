@@ -15,7 +15,9 @@ real components (`MarkdownRenderer.tsx`, `CodeBlock.tsx`, `MermaidDiagram.tsx`,
 | Raw HTML | **none** (`rehype-raw` absent) | Any `<tag>` renders as literal text. **Never use HTML.** |
 | Headings | `rehype-slug` | `##`/`###` get anchor IDs automatically. Use a clean heading hierarchy. |
 | Code | Shiki (`night-owl`/`github-light`) | Fence every block with a **known** language or it renders unstyled. |
-| Diagrams | Mermaid, recolored to brand, zoomable | ` ```mermaid ` is first-class. Prefer it. Parse errors fall back to a code block. |
+| Diagrams | ` ```flow ` / ` ```sequence ` (Mermaid bodies) via `@thepufferlabs/course-ui` | Four fixed colours (`:::blue/green/amber/purple`), fullscreen zoom; `sequence` has a step player with `%% step N:` narration. Plain ` ```mermaid ` still works. |
+| Rich blocks | ` ```callout ` ` ```quiz ` ` ```proscons ` ` ```params ` ` ```demo ` | Fenced blocks with Markdown/YAML bodies become components. Unknown fences stay code blocks. Full syntax: [`rich-content.md`](rich-content.md). |
+| Alerts | `> [!NOTE]` `[!TIP]` `[!WARNING]` `[!IMPORTANT]` `[!CAUTION]` | GitHub-style alert blockquotes render as callouts. |
 | Images | plain lazy `<img src>` | **Relative paths break.** Use absolute `course-assets` URLs only. |
 | Frontmatter | stripped, never parsed | Not a metadata source. Manifests are. |
 
@@ -25,8 +27,13 @@ real components (`MarkdownRenderer.tsx`, `CodeBlock.tsx`, `MermaidDiagram.tsx`,
 
 **DO**
 - Write pure GFM. Lead with prose and mental models; use tables for comparisons and lookups.
-- Use ` ```mermaid ` for every architectural idea (flowchart LR for pipelines, sequenceDiagram
-  for request timelines, stateDiagram-v2 for lifecycles, classDiagram only for data models).
+- Use ` ```flow ` for every architectural idea (pipelines, dataflow, decisions) and ` ```sequence `
+  with `%% step N:` narration for request timelines; keep ` ```mermaid ` for stateDiagram-v2 /
+  classDiagram. Tag nodes with `:::blue|green|amber|purple` only — the palette is fixed.
+- Open the chapter with a ` ```callout type=discussion ` (requirements dialogue), define the core
+  idea in a ` ```callout type=concept `, weigh options with ` ```proscons `, document APIs with
+  ` ```params `, and close with one ` ```quiz ` (every question explained). Syntax and placement
+  rules: [`rich-content.md`](rich-content.md).
 - Fence code with a real language tag. Keep runnable examples runnable; annotate with comments.
 - Reference images as
   `${SUPABASE_URL}/storage/v1/object/public/course-assets/<slug>/assets/<file>.svg`.
@@ -45,6 +52,10 @@ real components (`MarkdownRenderer.tsx`, `CodeBlock.tsx`, `MermaidDiagram.tsx`,
 - No unlabeled code fences and no exotic language IDs (Shiki will drop styling).
 - No reliance on frontmatter for anything the reader must show.
 - No mermaid diagrams over ~15 nodes — split them; huge graphs render illegibly after recolor.
+- No invented fence languages (` ```diagram `, ` ```note `, ` ```mcq `) and no colours outside
+  blue/green/amber/purple — unknown fences render as code, unknown colours fall back.
+- No unquoted `:` inside YAML strings in `quiz`/`proscons`/`params` bodies — the block renders
+  as a red "Invalid block" box. Quote the string.
 - No emojis in body text (house style) unless the spec explicitly allows them.
 
 ---
@@ -61,6 +72,8 @@ real components (`MarkdownRenderer.tsx`, `CodeBlock.tsx`, `MermaidDiagram.tsx`,
 | Sidebar link 404s → paywall "not found" | `contentKey` mismatch across JSONs | one key everywhere (builder enforces) |
 | Code lesson blank | `contentType:"code"` dir missing `README.md` | add `README.md` to the dir |
 | Literal `<div>` text in a lesson | raw HTML used | rewrite as markdown |
+| Red "Invalid ```quiz block" box | YAML error / missing `answer:` / < 2 options | fix the YAML (quote strings with `:`), see `rich-content.md` |
+| A ```quiz / ```flow shows as a plain code block | fence language misspelled, or old viewer | use the seven exact languages |
 | Broken image icon mid-lesson | relative image path | use absolute course-assets URL |
 | Premium lesson: "content is being prepared" | premium row has no stored file | ensure the `.md` exists under `docs/premium/**` |
 

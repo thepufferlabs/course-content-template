@@ -85,16 +85,21 @@ for(const ph of toc.toc||[]) for(const i of ph.items||[]){
 if((toc.toc?.[0]?.items?.[0]?.contentKey)===undefined) bad("toc[0].items[0] missing → overview 'Start Learning' CTA won't render");
 
 console.log(E?`   ${E} invariant error(s)`:"✓ cross-file invariants pass");
-process.exit(E?1:0);
+process.exitCode=E?1:0;
 NODE
 [ $? -ne 0 ] && ERRORS=$((ERRORS+1))
 
 echo "== render red flags (docs) =="
-# raw HTML tags (the reader has no rehype-raw)
-if grep -RIlnE '<(div|span|br|details|summary|sub|sup|kbd|img|table|iframe|style|script)[ >/]' docs --include=*.md 2>/dev/null | grep -q .; then
-  grep -RIlnE '<(div|span|br|details|summary|sub|sup|kbd|img|table|iframe|style|script)[ >/]' docs --include=*.md 2>/dev/null | sed 's/^/   raw HTML: /'
+# raw HTML tags outside code fences (the reader has no rehype-raw; Mermaid notes may use <br/>)
+HTML_HITS=$(node -e '
+const fs=require("fs"),path=require("path");const re=/<\/?(div|span|br|details|summary|sub|sup|kbd|img|table|iframe|style|script)[ >\/]/i;
+let files=[];(function walk(d){if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else if(f.endsWith(".md"))files.push(f);}})("docs");
+for(const f of files){let fence=null;const lines=fs.readFileSync(f,"utf8").split("\n");lines.forEach((l,i)=>{const m=/^\s{0,3}(`{3,}|~{3,})/.exec(l);if(fence){if(m&&m[1][0]===fence[0]&&m[1].length>=fence.length)fence=null;return;}if(m){fence=m[1];return;}if(re.test(l))console.log(f+":"+(i+1)+": "+l.trim().slice(0,80));});}
+')
+if [ -n "$HTML_HITS" ]; then
+  echo "$HTML_HITS" | sed 's/^/   raw HTML: /'
   err "raw HTML found in docs (renders as literal text — use pure markdown)"
-else ok "no raw HTML"; fi
+else ok "no raw HTML outside code fences"; fi
 # relative image paths
 if grep -RInE '!\[[^]]*\]\((\.|/docs|/assets|assets/|\.\.)' docs --include=*.md 2>/dev/null | grep -q .; then
   grep -RInE '!\[[^]]*\]\((\.|/docs|/assets|assets/|\.\.)' docs --include=*.md 2>/dev/null | sed 's/^/   rel img: /'
@@ -108,6 +113,46 @@ else ok "no wiki-links"; fi
 # mermaid presence
 MERM=$(grep -RIl '```mermaid' docs --include=*.md 2>/dev/null | wc -l | tr -d ' ')
 [ "${MERM:-0}" -ge 5 ] && ok "mermaid diagrams in $MERM files" || warn "only $MERM files with mermaid (rubric wants ≥1/doc)"
+# rich blocks (@thepufferlabs/course-ui fences): count them, catch the YAML/shape mistakes that render as an "Invalid block" box
+node <<'NODE'
+const fs=require("fs"),path=require("path");
+const RICH=new Set(["callout","flow","sequence","diagram","quiz","proscons","params","demo","codetabs"]);
+const KNOWN_COLOURS=new Set(["blue","green","amber","purple"]);
+let files=[];(function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else if(f.endsWith(".md"))files.push(f);}})("docs");
+let counts={},errors=0,warns=0,docsWithQuiz=0,docsWithDiagram=0,docs=0;
+for(const f of files){
+  const lines=fs.readFileSync(f,"utf8").split("\n");let i=0,hasQuiz=false,hasDiagram=false;const isDoc=/^docs\/(free|premium)\//.test(f);
+  while(i<lines.length){
+    const open=/^\s{0,3}(`{3,}|~{3,})\s*([\w+#-]+)?\s*(.*)$/.exec(lines[i]);
+    if(!open){i++;continue;}
+    const fence=open[1],lang=(open[2]||"").toLowerCase(),meta=open[3]||"",start=i+1;i++;const body=[];
+    while(i<lines.length&&!new RegExp("^\\s{0,3}"+fence[0]+"{"+fence.length+",}\\s*$").test(lines[i])){body.push(lines[i]);i++;}
+    i++;
+    if(!RICH.has(lang))continue;
+    counts[lang]=(counts[lang]||0)+1;const text=body.join("\n");const where=f+":"+start;
+    const bad=(m)=>{console.log("✗ "+where+" ```"+lang+": "+m);errors++;};
+    if(lang==="quiz"){hasQuiz=true;if(!/^\s*questions\s*:/m.test(text))bad("needs a top-level `questions:` list");
+      const n=(text.match(/^\s*-\s*question\s*:/gm)||[]).length,a=(text.match(/^\s*answer\s*:/gm)||[]).length,e=(text.match(/^\s*explanation\s*:/gm)||[]).length;
+      if(n&&a<n)bad(n+" questions but only "+a+" `answer:` lines");
+      if(n&&e<n){console.log("⚠ "+where+" quiz: "+(n-e)+" question(s) without `explanation:`");warns++;}}
+    if(lang==="proscons"&&!/^\s*(pros|cons)\s*:/m.test(text))bad("needs `pros:` and/or `cons:`");
+    if(lang==="params"&&!/^\s*rows\s*:/m.test(text))bad("needs a `rows:` list");
+    if(lang==="demo"){const w=/^\s*widget\s*:\s*(\S+)/m.exec(text);if(!w)bad("needs `widget:`");else if(w[1]!=="autocomplete"){console.log("⚠ "+where+" demo: widget \""+w[1]+"\" is not a registered widget (known: autocomplete)");warns++;}}
+    if(lang==="flow"||lang==="sequence"||lang==="diagram"){hasDiagram=true;if(lang==="diagram"&&!/^\s*(%%.*\n\s*)*[A-Za-z][\w-]*/.test(text))bad("first line must name the Mermaid diagram type (classDiagram, stateDiagram-v2, erDiagram, gantt, pie …)");for(const m of text.matchAll(/:::([\w-]+)/g))if(!KNOWN_COLOURS.has(m[1]))bad("colour `:::"+m[1]+"` is not one of blue/green/amber/purple");
+      if(/<br\s*\/?>|<\/?[a-z]+>/i.test(text.replace(/<<[^>]*>>/g,"")))bad("HTML in diagram text renders literally");}
+    if(lang==="codetabs"){const inner=(text.match(/^\s{0,3}(`{3,}|~{3,})\s*[\w+#-]+/gm)||[]).length;if(fence.length<4)bad("outer fence needs four backticks (````codetabs) so the inner ``` fences nest");if(inner<2)bad("needs two or more inner fenced code blocks (one per language), found "+inner);}
+    if(lang==="callout"){const t=/type=([\w-]+)/.exec(meta);if(t&&!["concept","discussion","note","tip","warning","important"].includes(t[1]))bad("unknown callout type="+t[1]);}
+    if(/\t/.test(text)&&["quiz","proscons","params","demo"].includes(lang))bad("tabs in YAML body (use two spaces)");
+  }
+  if(isDoc){docs++;if(hasQuiz)docsWithQuiz++;if(hasDiagram)docsWithDiagram++;}
+}
+const summary=Object.entries(counts).map(([k,v])=>k+"="+v).join(" ")||"none";
+console.log((errors?"✗ ":"✓ ")+"rich blocks: "+summary);
+if(docs&&docsWithQuiz<docs){console.log("⚠ "+(docs-docsWithQuiz)+"/"+docs+" docs have no closing ```quiz (rubric wants one per doc)");warns++;}
+if(docs&&docsWithDiagram<docs){console.log("⚠ "+(docs-docsWithDiagram)+"/"+docs+" docs have no ```flow / ```sequence diagram");warns++;}
+process.exitCode=errors?1:0;
+NODE
+[ $? -ne 0 ] && ERRORS=$((ERRORS+1))
 # stub solutions
 if grep -RInE 'TODO|FIXME|<!-- *TODO|\.\.\. *$' docs --include=*.md 2>/dev/null | grep -qi 'todo\|fixme'; then
   warn "TODO/FIXME markers left in docs (finish worked solutions)"

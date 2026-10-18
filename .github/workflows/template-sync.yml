@@ -1,0 +1,70 @@
+name: Template sync
+
+# Pushes the template-owned files (template-sync.json → managedPaths) into every course repo.
+# Course repos are the one-time copies GitHub made from "Use this template"; this keeps them
+# following the template afterwards. Discovery: GitHub topic `premium-content-repo` under the
+# downstream owner, plus a meta.json at the repo root. A repo opts out with an empty
+# `.template-sync-ignore` file.
+#
+# Secret: TEMPLATE_SYNC_TOKEN — fine-grained PAT owned by the downstream account with
+# Contents: read/write, Pull requests: read/write, Workflows: read/write, Metadata: read
+# on the course repos (Workflows is needed because .github/workflows/*.yml is managed).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - template-sync.json
+      - scripts/template-sync/**
+      - .claude/skills/course-factory/**
+      - .github/workflows/sync-to-supabase.yml
+      - .github/workflows/validate.yml
+      - .gitignore
+      - CLAUDE.md
+      - scripts/build-manifests.mjs
+      - scripts/validate-local.sh
+      - spec/constitution.md
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "push = commit to each repo's default branch; pr = open a pull request"
+        type: choice
+        options: [push, pr]
+        default: push
+      repos:
+        description: "Only these repos (space-separated owner/name). Empty = all by topic."
+        type: string
+        default: ""
+      dry_run:
+        description: "Show what would change, commit nothing"
+        type: boolean
+        default: false
+      include_legacy:
+        description: "Also sync repos whose default branch is not main"
+        type: boolean
+        default: false
+
+concurrency:
+  group: template-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync downstream repos
+        env:
+          GH_TOKEN: ${{ secrets.TEMPLATE_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::TEMPLATE_SYNC_TOKEN secret is not set"; exit 1
+          fi
+          gh auth setup-git
+          args=(--mode "${{ inputs.mode || 'push' }}")
+          [ "${{ inputs.dry_run }}" = "true" ] && args+=(--dry-run)
+          [ "${{ inputs.include_legacy }}" = "true" ] && args+=(--include-legacy)
+          for r in ${{ inputs.repos }}; do args+=(--repo "$r"); done
+          node scripts/template-sync/sync.mjs "${args[@]}"

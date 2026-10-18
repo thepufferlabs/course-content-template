@@ -19,7 +19,10 @@ studies) — you do not need that volume for ₹99, but you must clear the thres
 | Cheatsheets (premium) | **≥ 2** | incident-grade reference |
 | Interview/revision doc | **≥ 1** | premium |
 | Runnable code dirs (`src/**`) | **≥ 5** | each with `README.md` |
-| Mermaid diagrams | **≥ 1 per doc** | first-class in the reader |
+| Diagrams (` ```flow ` / ` ```sequence ` / ` ```diagram `) | **≥ 1 per doc** | four-colour palette, step player on sequences |
+| Closing ` ```quiz ` | **1 per doc, 4–8 questions** | every question has an `explanation:` |
+| ` ```callout ` (discussion or concept) | **≥ 1 per doc** | requirements dialogue / "What is X?" box |
+| ` ```proscons ` | **≥ 1 per tradeoff section** | numbers in the bullets |
 | Total substantive words | **≥ 40,000** | docs + labs + case studies combined |
 | Phases in `toc.json` | **5–7** | drives the overview |
 | Sidebar sections | **6–10** | semantic, not numeric |
@@ -62,7 +65,9 @@ Premium value is inside `docs/premium/**` (delivered), not in dark folders.
 - No `assets/banner.svg`, or a banner with no legible title in the 7:2 safe area.
 - `toc.json` uses `phases`/`entries` where the phase-form `toc[]` is expected, or items use
   `access` instead of `accessLevel`.
-- Fewer than 5 mermaid diagrams total, or a "deep dive" with none.
+- Fewer than 5 diagrams total, or a "deep dive" with none.
+- A doc without a closing ` ```quiz `, or a quiz question without `explanation:`.
+- An "Invalid block" box anywhere (bad YAML in a rich fence) — `validate-local.sh` flags these.
 
 ---
 

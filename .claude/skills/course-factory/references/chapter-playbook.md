@@ -69,12 +69,35 @@ be able to solve a real task from the cheatsheet alone during an incident.
 
 ---
 
-## Mermaid conventions
+## Rich blocks — where they go in the spine
 
-- `flowchart LR` for pipelines/dataflow; `sequenceDiagram` for request/response timelines;
-  `stateDiagram-v2` for lifecycles; `classDiagram` only for data models.
-- ≤ 15 nodes per diagram; split larger ones. Label edges. No inline HTML/`<br>` in node text
-  (it renders literally after recolor) — keep node labels short and plain.
+The reader renders nine fenced-block languages (`callout`, `flow`, `sequence`, `diagram`, `quiz`,
+`proscons`, `params`, `demo`, `codetabs`; exact syntax in [`rich-content.md`](../references/rich-content.md)).
+Map them onto the spine instead of sprinkling them:
+
+| Spine step | Block |
+|---|---|
+| 2 Hook / scope | ` ```callout type=discussion ` — Candidate/Interviewer dialogue that fixes requirements and numbers |
+| 3 Mental model | ` ```callout type=concept title="What is X?" ` then a ` ```flow ` |
+| 4 Core mechanics | ` ```params ` for every API contract; ordinary ` ```json ` for payloads |
+| 5 What happens internally | ` ```sequence ` with one `%% step N:` narration line per message |
+| 6 Production tradeoffs | one ` ```proscons ` per option (3–5 bullets a side, numbers in the bullets) |
+| 7 Anti-patterns | `> [!WARNING]` for the sharp edge, `> [!TIP]` for the cheap win |
+| 8 Worked example | ` ```demo ` only when a registered widget fits (today: `autocomplete`) |
+| 9 Revision | exactly one ` ```quiz ` (4–8 questions, each with `explanation:`) before "Next" |
+
+Floors: every DOC has ≥1 `flow` **or** `sequence`, ≥1 callout and 1 quiz; every LAB has ≥1
+`sequence`; cheatsheets use `params` tables for contracts.
+
+## Diagram conventions
+
+- ` ```flow ` for pipelines/dataflow/decisions (omit the header; `dir=LR` for left-to-right);
+  ` ```sequence ` for request/response timelines; ` ```diagram ` for every other Mermaid type (class, state, ER, gantt, …); plain ` ```mermaid ` is never written
+  (lifecycles) and `classDiagram` (data models).
+- **Four colours only:** `:::blue` entry points/clients, `:::green` services (default),
+  `:::amber` decisions/queues, `:::purple` external systems/async. Edges are always green.
+- ≤ 15 nodes per flow, 6–12 steps per sequence; split larger ones. Label edges. No inline
+  HTML/`<br>` in node text — keep labels short and plain.
 
 ## Quality reflexes (apply to every file)
 

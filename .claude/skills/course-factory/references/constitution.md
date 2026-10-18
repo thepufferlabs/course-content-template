@@ -135,7 +135,8 @@ keys are frozen here.
 
 ## Article IV — Markdown is pure GFM (the reader is deliberately minimal)
 
-The viewer uses `react-markdown` + `remark-gfm` + `rehype-slug`. That is all. Therefore:
+The viewer uses `react-markdown` + `remark-gfm` + `rehype-slug` + the `@thepufferlabs/course-ui`
+rich-block renderer. That is all. Therefore:
 
 - **No raw/inline HTML.** There is no `rehype-raw`. `<div>`, `<br>`, `<details>`, `<sub>` etc.
   render as literal text. Use markdown only. (Tables, task lists, strikethrough, footnotes via GFM are fine.)
@@ -144,8 +145,14 @@ The viewer uses `react-markdown` + `remark-gfm` + `rehype-slug`. That is all. Th
   `${SUPABASE_URL}/storage/v1/object/public/course-assets/<slug>/assets/<file>`.
 - **Code fences need a known language** (`ts`, `js`, `python`, `bash`, `sql`, `json`, `yaml`,
   `go`, `rust`, `java`, `mermaid`, …). Shiki highlights known langs; unknown → plain text.
-- **Diagrams are ` ```mermaid ` fences.** First-class: the reader renders + recolors them to the
-  brand palette, with zoom. Prefer them over ASCII. Keep each under ~15 nodes.
+- **Diagrams are ` ```flow ` / ` ```sequence ` fences** (Mermaid bodies, rendered by
+  `@thepufferlabs/course-ui` in a fixed four-colour palette; `sequence` gets a step player).
+  Plain ` ```mermaid ` still renders. Prefer them over ASCII. Keep each under ~15 nodes.
+- **Rich blocks are fenced code blocks, never HTML.** The nine languages `callout`, `flow`,
+  `sequence`, `diagram`, `quiz`, `proscons`, `params`, `demo`, `codetabs` (plus `> [!NOTE]`-style alerts) are the only
+  interactivity the reader has. Their bodies are Markdown, Mermaid or YAML — see
+  [`rich-content.md`](rich-content.md). Anything the viewer does not recognise degrades to a
+  code block, so an unknown fence language is a visible defect, not a feature.
 - **No `[[wiki-links]]`.** There is no wiki-link plugin — `[[key]]` renders as literal text.
   Cross-link with standard markdown `[Title](contentKey)`; the reader's linkMap resolves the href.
 - **Frontmatter is stripped and ignored.** The reader removes a leading `---…---` block but

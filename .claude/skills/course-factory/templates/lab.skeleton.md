@@ -28,12 +28,27 @@ isPublished: true
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  Client --> API --> Store
+```flow title="<Lab system>"
+Client[<Client>]:::blue --> API[<API>]
+API --> Store[(<Store>)]
+API --> Ext[<External system>]:::purple
 ```
 
 <Short description of the pieces and why.>
+
+```sequence title="<The main request, step by step>"
+participant C as Client
+participant A as API
+participant S as Store
+C->>A: <request>
+%% step 1: <What to notice.>
+A->>S: <write/read>
+%% step 2: <...>
+S-->>A: <result>
+%% step 3: <...>
+A-->>C: <response>
+%% step 4: <...>
+```
 
 ## Implementation
 
