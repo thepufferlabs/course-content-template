@@ -59,12 +59,12 @@ const keys=new Set();
 for(const it of idx){
   if(keys.has(it.contentKey)) bad(`duplicate contentKey ${it.contentKey}`);
   keys.add(it.contentKey);
-  const stem=it.sourcePath.split("/").pop().replace(/\.md$/,"").replace(/^\d+[-_]/,"");
+  const stem=it.sourcePath.split("/").pop().replace(/\.md$/,"").replace(/^\d+[a-z]?[-_]/,"");
   if(it.contentType!=="code" && it.contentKey!==stem) bad(`contentKey "${it.contentKey}" != filename stem "${stem}" (${it.sourcePath})`);
   if(it.accessLevel==="free" && it.sourcePath.includes("/premium/")) bad(`free item in premium folder: ${it.sourcePath}`);
   if(it.accessLevel==="premium" && it.sourcePath.includes("/free/")) bad(`premium item in free folder: ${it.sourcePath}`);
   const wantBucket=it.accessLevel==="free"?"free-content/":"premium-content/";
-  if(!it.storagePath.startsWith(wantBucket)) bad(`storagePath bucket prefix wrong for ${it.contentKey}: ${it.storagePath}`);
+  if(!String(it.storagePath||"").startsWith(wantBucket)) bad(`storagePath bucket prefix wrong for ${it.contentKey}: ${it.storagePath} (run builder)`);
   const rp=new RegExp(`^/project/${slug}/(learn|blog|code)/`);
   if(!rp.test(it.routePath)) bad(`routePath format wrong: ${it.routePath}`);
   if(it.contentType!=="code" && !fs.existsSync(it.sourcePath)) bad(`sourcePath missing on disk: ${it.sourcePath}`);
@@ -94,7 +94,7 @@ echo "== render red flags (docs) =="
 HTML_HITS=$(node -e '
 const fs=require("fs"),path=require("path");const re=/<\/?(div|span|br|details|summary|sub|sup|kbd|img|table|iframe|style|script)[ >\/]/i;
 let files=[];(function walk(d){if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else if(f.endsWith(".md"))files.push(f);}})("docs");
-for(const f of files){let fence=null;const lines=fs.readFileSync(f,"utf8").split("\n");lines.forEach((l,i)=>{const m=/^\s{0,3}(`{3,}|~{3,})/.exec(l);if(fence){if(m&&m[1][0]===fence[0]&&m[1].length>=fence.length)fence=null;return;}if(m){fence=m[1];return;}if(re.test(l))console.log(f+":"+(i+1)+": "+l.trim().slice(0,80));});}
+for(const f of files){let fence=null;const lines=fs.readFileSync(f,"utf8").split("\n");lines.forEach((l,i)=>{const m=/^\s{0,3}(`{3,}|~{3,})/.exec(l);if(fence){if(m&&m[1][0]===fence[0]&&m[1].length>=fence.length)fence=null;return;}if(m){fence=m[1];return;}if(re.test(l.replace(/(`+)[^`]*?\1/g,"")))console.log(f+":"+(i+1)+": "+l.trim().slice(0,80));});}
 ')
 if [ -n "$HTML_HITS" ]; then
   echo "$HTML_HITS" | sed 's/^/   raw HTML: /'
@@ -105,9 +105,14 @@ if grep -RInE '!\[[^]]*\]\((\.|/docs|/assets|assets/|\.\.)' docs --include=*.md 
   grep -RInE '!\[[^]]*\]\((\.|/docs|/assets|assets/|\.\.)' docs --include=*.md 2>/dev/null | sed 's/^/   rel img: /'
   err "relative image path(s) (won't resolve — use absolute course-assets URL)"
 else ok "no relative image paths"; fi
-# wiki-links (no wiki-link plugin in the reader → render as literal text)
-if grep -RInE '\[\[[a-z0-9-]+' docs 2>/dev/null | grep -q .; then
-  grep -RInE '\[\[[a-z0-9-]+' docs 2>/dev/null | sed 's/^/   wiki-link: /'
+# wiki-links (no wiki-link plugin in the reader → render as literal text); code fences and inline code are ignored
+WIKI_HITS=$(node -e '
+const fs=require("fs"),path=require("path");const re=/\[\[[a-z0-9][a-z0-9-]*\]\]/;
+let files=[];(function walk(d){if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else if(f.endsWith(".md"))files.push(f);}})("docs");
+for(const f of files){let fence=null;const lines=fs.readFileSync(f,"utf8").split("\n");lines.forEach((l,i)=>{const m=/^\s{0,3}(`{3,}|~{3,})/.exec(l);if(fence){if(m&&m[1][0]===fence[0]&&m[1].length>=fence.length)fence=null;return;}if(m){fence=m[1];return;}if(re.test(l.replace(/(`+)[^`]*?\1/g,"")))console.log(f+":"+(i+1)+": "+l.trim().slice(0,100));});}
+')
+if [ -n "$WIKI_HITS" ]; then
+  echo "$WIKI_HITS" | sed 's/^/   wiki-link: /'
   err "wiki-link [[...]] found (renders as literal text — use [text](contentKey))"
 else ok "no wiki-links"; fi
 # mermaid presence
@@ -139,7 +144,7 @@ for(const f of files){
     if(lang==="params"&&!/^\s*rows\s*:/m.test(text))bad("needs a `rows:` list");
     if(lang==="demo"){const w=/^\s*widget\s*:\s*(\S+)/m.exec(text);if(!w)bad("needs `widget:`");else if(w[1]!=="autocomplete"){console.log("⚠ "+where+" demo: widget \""+w[1]+"\" is not a registered widget (known: autocomplete)");warns++;}}
     if(lang==="flow"||lang==="sequence"||lang==="diagram"){hasDiagram=true;if(lang==="diagram"&&!/^\s*(%%.*\n\s*)*[A-Za-z][\w-]*/.test(text))bad("first line must name the Mermaid diagram type (classDiagram, stateDiagram-v2, erDiagram, gantt, pie …)");for(const m of text.matchAll(/:::([\w-]+)/g))if(!KNOWN_COLOURS.has(m[1]))bad("colour `:::"+m[1]+"` is not one of blue/green/amber/purple");
-      if(/<br\s*\/?>|<\/?[a-z]+>/i.test(text.replace(/<<[^>]*>>/g,"")))bad("HTML in diagram text renders literally");}
+      if(/<\/?[a-z]+>/i.test(text.replace(/<<[^>]*>>/g,"").replace(/<br\s*\/?>/gi,"")))bad("HTML in diagram text renders literally (only <br/> line breaks are allowed)");}
     if(lang==="codetabs"){const inner=(text.match(/^\s{0,3}(`{3,}|~{3,})\s*[\w+#-]+/gm)||[]).length;if(fence.length<4)bad("outer fence needs four backticks (````codetabs) so the inner ``` fences nest");if(inner<2)bad("needs two or more inner fenced code blocks (one per language), found "+inner);}
     if(lang==="callout"){const t=/type=([\w-]+)/.exec(meta);if(t&&!["concept","discussion","note","tip","warning","important"].includes(t[1]))bad("unknown callout type="+t[1]);}
     if(/\t/.test(text)&&["quiz","proscons","params","demo"].includes(lang))bad("tabs in YAML body (use two spaces)");

@@ -119,3 +119,29 @@ PR → merged, so a wave that is interrupted resumes from the sheet, not from me
 - Candidates skipped, with the reason.
 - Validator status and the re-audit result.
 - The branch and PR URL.
+
+## Lessons learned from the pilot (uml-diagram-with-mermaid, shipped 2026-10-18)
+
+Writers must follow these in addition to the rules above; each one was found the hard way.
+
+- The live site renders all nine fences and alerts through `@thepufferlabs/course-ui` since
+  2026-10-18. Plain ```mermaid fences still render with the old single-colour component, so
+  convert every one of them; never write a new plain ```mermaid fence.
+- No em dashes anywhere in prose, titles, YAML or narration. Use a comma, a colon or a new sentence.
+- A collapsible callout that wraps a diagram or any fenced block needs a four-backtick outer fence.
+- Inside `classDiagram`, a sequence-style `Note right of X : text` is invalid; write `note for X "text"`.
+- In a `sequence`, an `alt` / `else` whose branches both return with `-->>-` breaks activation
+  counting; use plain `-->>` returns in the branches and one `deactivate X` after `end`.
+- `block-beta` diagrams work on the site (it carries a guard for a mermaid bug) but fail in other
+  React hosts; prefer `flow` for box-and-arrow layouts and keep `block-beta` for true column grids.
+- Quizzes: 4-8 questions, every one with `explanation:`, answers spread across A-D, exactly one quiz
+  per doc, at the end before any "Next" link. No quiz for `00-learning-path.md` or blog posts.
+- Quote every YAML string that contains `:` or `,`; two-space indent; no tabs; keep the fence
+  info string on one line (`title="…"` first, then flags).
+- `params` only for contract tables (Parameter/Field/Flag/Option with a description column);
+  comparison grids with more than three columns stay GFM tables. `proscons` only for a true
+  pros/cons split. Never force a data table into either.
+- Keep headings, frontmatter, `contentKey`, cross-links and prose untouched; blocks are added, not
+  substituted for sentences. A diagram replaces only the ```mermaid fence it converts.
+- Leave `TODO`/`FIXME` markers alone (separate content task); report them in the summary.
+- After writing, run the three gate commands in step 3; a lesson with any `✗` is not done.

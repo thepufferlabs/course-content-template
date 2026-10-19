@@ -98,7 +98,7 @@ function addDoc(abs, accessLevel) {
   if (file.toLowerCase() === "readme.md") return;
   const sourcePath = rel(abs);
   const stem = file.replace(/\.md$/, "");
-  const key = fm.contentKey || stem.replace(/^\d+[-_]/, "");
+  const key = fm.contentKey || stem.replace(/^\d+[a-z]?[-_]/, "");
   const order = typeof fm.order === "number" ? fm.order
     : (parseInt((stem.match(/^(\d+)/) || [])[1] || "0", 10));
   const section = fm.section || basename(dirname(abs));
@@ -129,7 +129,7 @@ function addCodeDirs(base, accessLevel) {
     const abs = p(base, name);
     if (!statSync(abs).isDirectory()) continue;
     const sourcePath = `${base}/${name}`;
-    const key = name.replace(/^\d+[-_]/, "");
+    const key = name.replace(/^\d+[a-z]?[-_]/, "");
     const order = parseInt((name.match(/^(\d+)/) || [])[1] || "0", 10);
     const bucket = accessLevel === "free" ? "free-content" : "premium-content";
     if (!existsSync(join(abs, "README.md")))
