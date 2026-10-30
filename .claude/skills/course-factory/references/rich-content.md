@@ -14,7 +14,7 @@ component. Options go on the fence info string after the language:
 | `flow`     | Mermaid  | Flowchart in the fixed four-colour palette, fullscreen zoom/pan            |
 | `sequence` | Mermaid  | Sequence diagram with a **step player** (play / prev / next / playlist)    |
 | `quiz`     | YAML     | MCQ card: `1 / N` counter, Previous/Next, instant reveal, results screen   |
-| `proscons` | YAML     | Side-by-side green Pros / red Cons cards                                   |
+| `proscons` | YAML     | Green Pros card above red Cons card, each the full width of the column     |
 | `params`   | YAML     | "Request Parameters" table: green header, code chips, zebra rows          |
 | `demo`     | YAML     | Framed interactive widget (`widget: autocomplete` ships; more by name)     |
 | `codetabs` | fences   | One code block with a **tab per language** (outer fence = 4 backticks)     |
@@ -31,7 +31,7 @@ GitHub alerts also work and render as callouts: `> [!NOTE] Title`, `> [!TIP]`, `
 | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | Hook / clarifying scope     | `callout type=discussion` — a Candidate/Interviewer dialogue that pins the requirements           |
 | Mental model                | `callout type=concept title="What is X?"` for the one-paragraph definition, then a `flow` diagram |
-| Core mechanics / APIs       | `params` for every request/response contract; ordinary ```` ```json ```` for sample payloads; `codetabs` when the same call is shown in 2+ languages |
+| Core mechanics / APIs       | `params` for every request/response contract; ordinary ```` ```json ```` for sample payloads; **every implementation listing is one `codetabs` pane with TypeScript, C# and Python tabs** (the default code window, see below) |
 | What happens internally     | `sequence` with `%% step N:` narration — the reader plays the request through step by step       |
 | Production tradeoffs        | `proscons` per option being weighed (one block per option, 3–5 bullets each)                     |
 | Anti-patterns / boundaries  | `> [!WARNING]` for the sharp edge; `> [!TIP]` for the cheap win                                   |
@@ -226,10 +226,42 @@ notice. Propose new widgets in the course spec; they are built in `@thepufferlab
 
 ### codetabs
 
-When a chapter shows the same snippet in more than one language (SDKs, CLI vs HTTP, two
+**The default code window is one pane with three languages: TypeScript, C# and Python.**
+Implementation listings, worked solutions and tests are written once per language and shown
+in a single `codetabs` pane, never as separate fences in separate sections. The viewer draws
+up to four languages as an editor-style tab strip; the reader's choice is remembered and
+switches every pane in the lesson, so use the same labels everywhere:
+
+`````md
+````codetabs title="Validate the Mcp-Method header" default=TypeScript
+```ts tab="TypeScript"
+export function checkMethod(header: string | undefined, body: { method: string }): number | null {
+  return header === body.method ? null : -32020;
+}
+```
+```csharp tab="C#"
+public static int? CheckMethod(string? header, JsonRpcRequest body) =>
+    header == body.Method ? null : -32020;
+```
+```python tab="Python"
+def check_method(header: str | None, body: dict) -> int | None:
+    return None if header == body["method"] else -32020
+```
+````
+`````
+
+- Order TypeScript, C#, Python; labels exactly `tab="TypeScript"`, `tab="C#"`, `tab="Python"`;
+  `default=TypeScript`. Each tab must compile and run; if a language genuinely has no
+  equivalent, use a two-tab pane and say why in the prose.
+- Code that exists in one language only (a CLI helper, a Dockerfile, YAML, PromQL) stays an
+  ordinary fence: panes are for the same behaviour in several languages.
+- For a course written for one other set of languages, keep the same rule with that set.
+
+When a chapter shows the same snippet in more than one form (SDKs, CLI vs HTTP, two
 runtimes), do **not** stack separate fences: wrap them in one `codetabs` block. The reader
 gets a tab per language, and choosing a language switches every tabbed block in the lesson.
-The outer fence uses **four** backticks so the inner three-backtick fences nest.
+The outer fence uses **four** backticks so the inner three-backtick fences nest (five if a
+listing itself contains a three-backtick line).
 
 `````md
 ````codetabs title="Create a client" default=python

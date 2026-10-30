@@ -125,14 +125,18 @@ const RICH=new Set(["callout","flow","sequence","diagram","quiz","proscons","par
 const KNOWN_COLOURS=new Set(["blue","green","amber","purple"]);
 let files=[];(function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else if(f.endsWith(".md"))files.push(f);}})("docs");
 let counts={},errors=0,warns=0,docsWithQuiz=0,docsWithDiagram=0,docs=0;
+const CODE3={ts:"ts",typescript:"ts",tsx:"ts",csharp:"csharp",cs:"csharp",python:"python",py:"python"};const stacked=[];
 for(const f of files){
-  const lines=fs.readFileSync(f,"utf8").split("\n");let i=0,hasQuiz=false,hasDiagram=false;const isDoc=/^docs\/(free|premium)\//.test(f);
+  const lines=fs.readFileSync(f,"utf8").split("\n");let i=0,hasQuiz=false,hasDiagram=false;const loose=new Set();let paned=false;const isDoc=/^docs\/(free|premium)\//.test(f);
   while(i<lines.length){
     const open=/^\s{0,3}(`{3,}|~{3,})\s*([\w+#-]+)?\s*(.*)$/.exec(lines[i]);
     if(!open){i++;continue;}
     const fence=open[1],lang=(open[2]||"").toLowerCase(),meta=open[3]||"",start=i+1;i++;const body=[];
     while(i<lines.length&&!new RegExp("^\\s{0,3}"+fence[0]+"{"+fence.length+",}\\s*$").test(lines[i])){body.push(lines[i]);i++;}
     i++;
+    // Default code window: TypeScript, C# and Python in one codetabs pane, not separate fences.
+    if(CODE3[lang])loose.add(CODE3[lang]);
+    if(lang==="codetabs"){const inner=new Set((body.join("\n").match(/^\s{0,3}`{3,}\s*([\w+#-]+)/gm)||[]).map(s=>CODE3[s.replace(/^\s*`+\s*/,"").toLowerCase()]).filter(Boolean));if(inner.size>=2)paned=true;}
     if(!RICH.has(lang))continue;
     counts[lang]=(counts[lang]||0)+1;const text=body.join("\n");const where=f+":"+start;
     const bad=(m)=>{console.log("✗ "+where+" ```"+lang+": "+m);errors++;};
@@ -149,11 +153,12 @@ for(const f of files){
     if(lang==="callout"){const t=/type=([\w-]+)/.exec(meta);if(t&&!["concept","discussion","note","tip","warning","important"].includes(t[1]))bad("unknown callout type="+t[1]);}
     if(/\t/.test(text)&&["quiz","proscons","params","demo"].includes(lang))bad("tabs in YAML body (use two spaces)");
   }
-  if(isDoc){docs++;if(hasQuiz)docsWithQuiz++;if(hasDiagram)docsWithDiagram++;}
+  if(isDoc){docs++;if(hasQuiz)docsWithQuiz++;if(hasDiagram)docsWithDiagram++;if(loose.size>=2&&!paned)stacked.push(f);}
 }
 const summary=Object.entries(counts).map(([k,v])=>k+"="+v).join(" ")||"none";
 console.log((errors?"✗ ":"✓ ")+"rich blocks: "+summary);
 if(docs&&docsWithQuiz<docs){console.log("⚠ "+(docs-docsWithQuiz)+"/"+docs+" docs have no closing ```quiz (rubric wants one per doc)");warns++;}
+if(stacked.length){console.log("⚠ "+stacked.length+" docs show TypeScript/C#/Python code as separate fences with no ````codetabs pane (default code window: one pane, three languages): "+stacked.slice(0,5).join(", ")+(stacked.length>5?", ...":""));warns++;}
 if(docs&&docsWithDiagram<docs){console.log("⚠ "+(docs-docsWithDiagram)+"/"+docs+" docs have no ```flow / ```sequence diagram");warns++;}
 process.exitCode=errors?1:0;
 NODE

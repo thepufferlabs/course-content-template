@@ -79,7 +79,7 @@ Map them onto the spine instead of sprinkling them:
 |---|---|
 | 2 Hook / scope | ` ```callout type=discussion ` — Candidate/Interviewer dialogue that fixes requirements and numbers |
 | 3 Mental model | ` ```callout type=concept title="What is X?" ` then a ` ```flow ` |
-| 4 Core mechanics | ` ```params ` for every API contract; ordinary ` ```json ` for payloads |
+| 4 Core mechanics | ` ```params ` for every API contract; ordinary ` ```json ` for payloads; every implementation listing as one ` ````codetabs ` pane with TypeScript, C# and Python tabs |
 | 5 What happens internally | ` ```sequence ` with one `%% step N:` narration line per message |
 | 6 Production tradeoffs | one ` ```proscons ` per option (3–5 bullets a side, numbers in the bullets) |
 | 7 Anti-patterns | `> [!WARNING]` for the sharp edge, `> [!TIP]` for the cheap win |

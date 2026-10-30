@@ -54,9 +54,17 @@ C -- no --> E[(<store>)]
 
 <Core mechanics, built in stages. Each stage runnable/annotated. Link to src/** where relevant.>
 
-```ts
+````codetabs title="<What this code does>" default=TypeScript
+```ts tab="TypeScript"
 // concrete, runnable, annotated — no hand-waving
 ```
+```csharp tab="C#"
+// the same behaviour in C#
+```
+```python tab="Python"
+# the same behaviour in Python
+```
+````
 
 ## What happens internally
 

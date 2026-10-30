@@ -57,6 +57,20 @@ S-->>C: <response>
 %% step 4: <...>
 ```
 
+## Code (default window: one pane, three languages)
+
+````codetabs title="<What this code does>" default=TypeScript
+```ts tab="TypeScript"
+<TypeScript>
+```
+```csharp tab="C#"
+<C#>
+```
+```python tab="Python"
+<Python>
+```
+````
+
 ## Pros / cons (one block per option)
 
 ```proscons title="<Option A> vs. <Option B>"
