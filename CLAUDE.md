@@ -60,6 +60,22 @@ node scripts/build-manifests.mjs && bash scripts/validate-local.sh
 git switch -c chore/rich-blocks && git add -A && git commit -m "Rich blocks for every lesson" && git push -u origin chore/rich-blocks && gh pr create --fill
 ```
 
+## Ask AI readiness (the site's course tutor)
+
+Every lesson page has **Ask AI**, which answers from this course and cites sections by their
+heading anchors. Write lessons by `.claude/skills/course-factory/references/ai-tutor.md`:
+one `#` title, descriptive unique `##` sections, typed code fences, an `explanation:` on every
+quiz question, and never a quiz title starting with `Practice:` (reserved for AI quizzes). Check with:
+
+```
+node .claude/skills/course-factory/scripts/ai-readiness.mjs
+```
+
+CI prints the same report on every push (it never blocks). To bring an existing course up to it
+and add its golden questions (`ai/eval.json`), follow
+`.claude/skills/course-factory/workflows/ai-readiness.md`. Embeddings are generated later, in a
+separate phase, not by CI.
+
 ## Template-managed files (do not edit here)
 
 These paths are owned by `thepufferlabs/course-content-template` and are overwritten in every

@@ -29,7 +29,7 @@ repo the existing sync pipeline publishes unchanged. See `SKILL.md` for the loop
 | `SKILL.md` | Entry point; the SDD loop and when to read each reference. |
 | `references/` | `constitution.md` (the contract), `schema-contract.md`, `consumer-render.md`, `chapter-playbook.md`, `quality-rubric.md`, `asset-guide.md`. |
 | `templates/` | `course-spec`, `curriculum-plan`, `tasks` + `meta.json` + 5 content skeletons. |
-| `scripts/` | `new-course.sh` (scaffold), `build-manifests.mjs` (derive manifests + counts), `validate-local.sh` (the render + contract gate). |
+| `scripts/` | `new-course.sh` (scaffold), `build-manifests.mjs` (derive manifests + counts), `validate-local.sh` (the render + contract gate). The skill's own `scripts/ai-readiness.mjs` reports how well the course works with Ask AI. |
 | `workflows/` | `generate-course.md` — the agentic fan-out playbook for generating a full course AFK. |
 
 ## What it guarantees

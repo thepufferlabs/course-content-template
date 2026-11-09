@@ -82,6 +82,8 @@ Never ask 17 ad-hoc questions. Route all inputs through the spec.
 | [`references/asset-guide.md`](references/asset-guide.md) | Generating `banner.svg`, `thumbnail.svg`, per-section previews. |
 | [`workflows/generate-course.md`](workflows/generate-course.md) | Phase 4. Agentic AFK fan-out: how to parallelize chapter generation across subagents. |
 | [`workflows/enrich-course.md`](workflows/enrich-course.md) | An **existing** course that predates the rich blocks: audit it with `scripts/enrich-report.mjs`, add blocks lesson by lesson without rewriting prose, verify, preview, PR. |
+| [`references/ai-tutor.md`](references/ai-tutor.md) | Writing any lesson. How Ask AI (the site's course tutor) reads a course: sections and anchors it cites, search terms, quiz explanations, the reserved `Practice:` quiz title, golden questions (`ai/eval.json`), the embedding chunk contract. |
+| [`workflows/ai-readiness.md`](workflows/ai-readiness.md) | Making an existing course Ask AI ready, one repo at a time: `scripts/ai-readiness.mjs` report → fix lessons → golden questions. Embeddings are a separate later phase. |
 
 ## Templates (copy, then fill)
 

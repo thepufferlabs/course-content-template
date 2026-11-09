@@ -6,3 +6,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash scripts/validate-local.sh
+      # Report only: how well the course works with Ask AI (never fails the job).
+      # Guide: .claude/skills/course-factory/references/ai-tutor.md
+      - name: Ask AI readiness (report)
+        if: always()
+        continue-on-error: true
+        run: node .claude/skills/course-factory/scripts/ai-readiness.mjs --summary "$GITHUB_STEP_SUMMARY"
