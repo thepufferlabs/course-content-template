@@ -126,6 +126,14 @@ const KNOWN_COLOURS=new Set(["blue","green","amber","purple"]);
 let files=[];(function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else if(f.endsWith(".md"))files.push(f);}})("docs");
 let counts={},errors=0,warns=0,docsWithQuiz=0,docsWithDiagram=0,docs=0;
 const CODE3={ts:"ts",typescript:"ts",tsx:"ts",csharp:"csharp",cs:"csharp",python:"python",py:"python"};const stacked=[];
+// Code formatting (course-ui formats every block the same way; source should already match):
+// strict JSON in the JSON.stringify(v, null, 2) layout, spaces not tabs, no shared indentation.
+const fmt=[];const TABS_OK=new Set(["go","golang","makefile","make"]);const INDENTED=new Set(["python","py","csharp","cs","ts","typescript","tsx","js","javascript","jsx","yaml","yml","bash","sh","go","java","rust","sql"]);
+function checkFormat(lang,body,where){const text=body.join("\n");if(!text.trim())return;
+  if(/^\t/m.test(text)&&!TABS_OK.has(lang)){fmt.push(where+" "+lang+": tab indentation (use spaces)");return;}
+  if(lang==="json"){try{const v=JSON.parse(text);if(text.trim()!==JSON.stringify(v,null,2)&&!/\d{16,}/.test(text))fmt.push(where+" json: not in the two-space JSON.stringify(v, null, 2) layout");}catch{}return;}
+  if(!INDENTED.has(lang))return;const ind=body.filter(l=>l.trim()).map(l=>/^ */.exec(l)[0].length);
+  if(ind.length&&Math.min(...ind)>0){fmt.push(where+" "+lang+": every line is indented (remove the shared indentation)");return;}}
 for(const f of files){
   const lines=fs.readFileSync(f,"utf8").split("\n");let i=0,hasQuiz=false,hasDiagram=false;const loose=new Set();let paned=false;const isDoc=/^docs\/(free|premium)\//.test(f);
   while(i<lines.length){
@@ -136,6 +144,8 @@ for(const f of files){
     i++;
     // Default code window: TypeScript, C# and Python in one codetabs pane, not separate fences.
     if(CODE3[lang])loose.add(CODE3[lang]);
+    if(lang==="codetabs"){let cur=null,buf=[],at=0;body.forEach((l,k)=>{const m=/^\s{0,3}`{3,}\s*([\w+#-]+)?/.exec(l);if(m&&cur===null){cur=(m[1]||"").toLowerCase();buf=[];at=start+k+1;}else if(/^\s{0,3}`{3,}\s*$/.test(l)&&cur!==null){checkFormat(cur,buf,f+":"+at);cur=null;}else if(cur!==null)buf.push(l);});}
+    else if(!RICH.has(lang)&&lang!=="mermaid")checkFormat(lang,body,f+":"+start);
     if(lang==="codetabs"){const inner=new Set((body.join("\n").match(/^\s{0,3}`{3,}\s*([\w+#-]+)/gm)||[]).map(s=>CODE3[s.replace(/^\s*`+\s*/,"").toLowerCase()]).filter(Boolean));if(inner.size>=2)paned=true;}
     if(!RICH.has(lang))continue;
     counts[lang]=(counts[lang]||0)+1;const text=body.join("\n");const where=f+":"+start;
@@ -159,6 +169,7 @@ const summary=Object.entries(counts).map(([k,v])=>k+"="+v).join(" ")||"none";
 console.log((errors?"✗ ":"✓ ")+"rich blocks: "+summary);
 if(docs&&docsWithQuiz<docs){console.log("⚠ "+(docs-docsWithQuiz)+"/"+docs+" docs have no closing ```quiz (rubric wants one per doc)");warns++;}
 if(stacked.length){console.log("⚠ "+stacked.length+" docs show TypeScript/C#/Python code as separate fences with no ````codetabs pane (default code window: one pane, three languages): "+stacked.slice(0,5).join(", ")+(stacked.length>5?", ...":""));warns++;}
+if(fmt.length){console.log("⚠ "+fmt.length+" code blocks need formatting (course-ui re-formats on render, but keep the source clean): "+fmt.slice(0,5).join("; ")+(fmt.length>5?"; ...":""));warns++;}
 if(docs&&docsWithDiagram<docs){console.log("⚠ "+(docs-docsWithDiagram)+"/"+docs+" docs have no ```flow / ```sequence diagram");warns++;}
 process.exitCode=errors?1:0;
 NODE

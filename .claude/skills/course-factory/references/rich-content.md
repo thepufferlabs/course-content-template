@@ -17,7 +17,7 @@ component. Options go on the fence info string after the language:
 | `proscons` | YAML     | Green Pros card above red Cons card, each the full width of the column     |
 | `params`   | YAML     | "Request Parameters" table: green header, code chips, zebra rows          |
 | `demo`     | YAML     | Framed interactive widget (`widget: autocomplete` ships; more by name)     |
-| `codetabs` | fences   | One code block with a **tab per language** (outer fence = 4 backticks)     |
+| `codetabs` | fences   | One code editor, **a language dropdown** (outer fence = 4 backticks)     |
 | `diagram`  | Mermaid  | Any other Mermaid type (class, state, ER, gantt, pie, mindmap, timeline, git, journey, quadrant, requirement, C4, sankey, xychart, block, packet, kanban, architecture) in the four colours |
 
 GitHub alerts also work and render as callouts: `> [!NOTE] Title`, `> [!TIP]`, `> [!WARNING]`,
@@ -31,7 +31,7 @@ GitHub alerts also work and render as callouts: `> [!NOTE] Title`, `> [!TIP]`, `
 | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | Hook / clarifying scope     | `callout type=discussion` — a Candidate/Interviewer dialogue that pins the requirements           |
 | Mental model                | `callout type=concept title="What is X?"` for the one-paragraph definition, then a `flow` diagram |
-| Core mechanics / APIs       | `params` for every request/response contract; ordinary ```` ```json ```` for sample payloads; **every implementation listing is one `codetabs` pane with TypeScript, C# and Python tabs** (the default code window, see below) |
+| Core mechanics / APIs       | `params` for every request/response contract; ordinary ```` ```json ```` for sample payloads (two-space `JSON.stringify` layout); **every implementation listing is one `codetabs` editor with TypeScript, C# and Python in its language dropdown** (the default code window, see below) |
 | What happens internally     | `sequence` with `%% step N:` narration — the reader plays the request through step by step       |
 | Production tradeoffs        | `proscons` per option being weighed (one block per option, 3–5 bullets each)                     |
 | Anti-patterns / boundaries  | `> [!WARNING]` for the sharp edge; `> [!TIP]` for the cheap win                                   |
@@ -192,7 +192,9 @@ cons:
 ```
 ````
 
-Inline Markdown allowed in items. `prosTitle:` / `consTitle:` rename the headers.
+Inline Markdown allowed in items. `prosTitle:` / `consTitle:` rename the headers. The viewer
+stacks the pros card above the cons card, each the full width of the column, so bullets can
+be full sentences with numbers; do not try to balance the two sides to line up.
 
 ### params
 
@@ -226,11 +228,13 @@ notice. Propose new widgets in the course spec; they are built in `@thepufferlab
 
 ### codetabs
 
-**The default code window is one pane with three languages: TypeScript, C# and Python.**
-Implementation listings, worked solutions and tests are written once per language and shown
-in a single `codetabs` pane, never as separate fences in separate sections. The viewer draws
-up to four languages as an editor-style tab strip; the reader's choice is remembered and
-switches every pane in the lesson, so use the same labels everywhere:
+**The default code window is one editor with at least three languages: TypeScript, C# and
+Python, picked from a language dropdown in its header.** Implementation listings, worked
+solutions and tests are written once per language and shown in a single `codetabs` pane, never
+as separate fences in separate sections. The reader's language choice is remembered and
+switches every pane in the lesson (and across lessons), so use the same labels everywhere.
+Add `switcher=tabs` on the outer fence only if a block must show an editor-style tab strip
+instead of the dropdown.
 
 `````md
 ````codetabs title="Validate the Mcp-Method header" default=TypeScript
@@ -255,20 +259,25 @@ def check_method(header: str | None, body: dict) -> int | None:
   equivalent, use a two-tab pane and say why in the prose.
 - Code that exists in one language only (a CLI helper, a Dockerfile, YAML, PromQL) stays an
   ordinary fence: panes are for the same behaviour in several languages.
+- A fourth language (Go, Java, cURL …) may follow the three defaults in the same pane; never
+  drop one of the three to make room.
 - For a course written for one other set of languages, keep the same rule with that set.
 
 When a chapter shows the same snippet in more than one form (SDKs, CLI vs HTTP, two
 runtimes), do **not** stack separate fences: wrap them in one `codetabs` block. The reader
-gets a tab per language, and choosing a language switches every tabbed block in the lesson.
+gets one editor with a language dropdown, and choosing a language switches every tabbed block in the lesson.
 The outer fence uses **four** backticks so the inner three-backtick fences nest (five if a
 listing itself contains a three-backtick line).
 
 `````md
-````codetabs title="Create a client" default=python
-```ts
+````codetabs title="Create a client" default=TypeScript
+```ts tab="TypeScript"
 const client = new Client({ apiKey: process.env.API_KEY });
 ```
-```python tab="Python 3"
+```csharp tab="C#"
+var client = new Client(Environment.GetEnvironmentVariable("API_KEY"));
+```
+```python tab="Python"
 client = Client(api_key=os.environ["API_KEY"])
 ```
 ```sh tab="cURL"
@@ -284,6 +293,23 @@ curl -H "Authorization: Bearer $API_KEY" https://api.example.com/v1/clients
 - Lighter form: consecutive ordinary fences each carrying `tab="…"` (and `group="Title"` on the
   first) are grouped by the viewer. Prefer the explicit `codetabs` form in generated content.
 - GitHub renders the outer block as one code block containing the inner snippets — still readable.
+
+### Code formatting (every fence, inside or outside `codetabs`)
+
+The viewer (course-ui `formatCode`) normalises every code block before it is highlighted, so a
+listing reads the same in Storybook and on the site. Write the source in that shape already:
+
+- **Indentation:** spaces, never tabs (Go and Makefiles excepted). Python and C# indent 4
+  spaces, TypeScript/JavaScript, JSON and YAML 2. Copy idiomatic formatter output (black,
+  `dotnet format`, prettier) rather than hand-aligning.
+- **Excerpts start at column 0:** when you quote a method out of a class, remove the
+  indentation every line shares. No blank first or last line, no trailing spaces.
+- **JSON** payloads are strict JSON pretty-printed with two spaces, one member per line: the
+  `JSON.stringify(value, null, 2)` layout, so `"capabilities": { "tools": {} }` becomes
+  three lines. Use a `jsonc` fence when you need comments or an elided `...`; it is shown as
+  written.
+- `validate-local.sh` warns about tab indentation, shared indentation and JSON that is not in
+  the two-space layout.
 
 ---
 
